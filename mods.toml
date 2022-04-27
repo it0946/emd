@@ -1,0 +1,26 @@
+# an example mods.toml file
+
+# required. specifies the minecraft version for which emd will attempt to get mods for
+minecraft-version = "1.18.2"
+# required. specifies the modloader which you want mods for
+mod-loader = "fabric"
+
+# optional. specifies the maximum amount of downloads happening at the same time. too many
+# may slowdown the overall speed of your computer and the downloads 
+# simoltaneous-downloads = 4
+
+# optional. specifies the folder where mods will be downloaded. if the path does not exist the program will fail
+# destination = "mods"
+
+# Some example mods to download
+modrinth = [
+    "ok-zoomer",
+    "sodium",
+    "starlight",
+    "iris",
+    "lithium",
+    "continuity",
+    "dashloader",
+    "fabric-api",
+    "kappa",
+]

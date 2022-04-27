@@ -1,0 +1,27 @@
+[package]
+name = "emd"
+version = "0.1.0"
+edition = "2021"
+description = "A small program for installing minecraft mods"
+
+[dependencies]
+# async runtime required by hyper, otherwise everything would have to be blocking 
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "fs"] }
+# provides the client which will be used for http requests and downloading files
+reqwest = { version = "0.11", features = ["json"] }
+# these three are required for parsing 
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.5"
+# required to determine how many concurrent threads should be installing mods
+num_cpus = "1"
+# nicer error handling interally without being overly complicated
+anyhow = "1"
+
+[profile.dev.package.'*']
+opt-level = 3
+
+[profile.release]
+codegen-units = 1
+lto = true
+strip = true
