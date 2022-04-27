@@ -7,6 +7,7 @@ use serde::Deserialize;
 struct ModrinthFile {
     filename: String,
     url: String,
+    primary: bool,
 }
 
 #[allow(dead_code)]
@@ -61,16 +62,24 @@ pub async fn get_from_modrinth(
         })
         .collect::<Vec<_>>();
 
+    let mut preferred = 0;
+
     if remaining.len() == 0 {
         return Err(anyhow!(
             "Couldn't find a matching version of ({}) of {}",
             version,
             m.mod_name
         ));
+    } else if remaining.len() > 1 {
+        for (i, file) in remaining[0].files.iter().enumerate() {
+            if file.primary {
+                preferred = i;
+            }
+        }
     }
 
-    let link = std::mem::take(&mut remaining[0].files[0].url);
-    let filename = std::mem::take(&mut remaining[0].files[0].filename);
+    let link = std::mem::take(&mut remaining[0].files[preferred].url);
+    let filename = std::mem::take(&mut remaining[0].files[preferred].filename);
 
     Ok(DownloadableMod::new(filename, link))
 }
