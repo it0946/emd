@@ -4,6 +4,7 @@ use crate::{
 };
 use reqwest::Client;
 use std::path::PathBuf;
+use std::collections::HashSet;
 use std::{ops::Range, sync::Arc};
 
 pub struct EmdState {
@@ -47,14 +48,15 @@ impl EmdState {
         Ok(emd_state)
     }
 
-    pub async fn run(self) {
+    pub async fn run(mut self) {
+        println!("Downloading mods:");
+        
+        self.check_duplicates();
         let slice_indices = self.get_slice_indices();
-
+    
         let emd_state = Arc::new(self);
         let client = Client::new();
         let mut join_handles = vec![];
-
-        println!("Downloading mods:");
 
         for range in slice_indices {
             let c_emd_state = emd_state.clone();
@@ -79,17 +81,35 @@ impl EmdState {
         for m in slice {
             match m.get_url(&client, version, mod_loader).await {
                 Ok(ok) => {
+                    if path.join(&ok.filename).exists() {
+                        println!("\t{} already exists", ok.filename);
+                        continue;
+                    }
+
                     if let Err(e) = ok.download_mod(&client, path).await {
-                        println!("\tfailed to download `{}`: {}", m.mod_name, e);
+                        println!("\tfailed to download {}: {}", m.mod_name, e);
                     } else {
                         println!("\tdownloaded {}", m.mod_name);
                     }
                 }
                 Err(e) => {
-                    println!("\tfailed to download: `{}`: {}", m.mod_name, e);
+                    println!("\tfailed to download {}: {}", m.mod_name, e);
                 }
             }
         }
+    }
+
+    fn check_duplicates(&mut self) {
+        let mut unique_mods = HashSet::new();
+        self.mod_list.retain(|m| {
+            // cloning and allocating more strings will consume more memory,
+            // but realistically it does not matter at this scale
+            let unique = unique_mods.insert(m.mod_name.clone());
+            if !unique {
+                println!("\tduplicate mod warning: {}", m.mod_name);
+            }
+            unique
+        });
     }
 
     fn get_slice_indices(&self) -> Vec<Range<usize>> {

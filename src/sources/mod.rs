@@ -7,7 +7,7 @@ use tokio::{fs, io::AsyncWriteExt};
 mod modrinth;
 
 pub struct DownloadableMod {
-    filename: String,
+    pub filename: String,
     download_link: String,
 }
 
@@ -44,11 +44,13 @@ impl DownloadableMod {
     }
 }
 
+#[derive(PartialEq, Eq)]
 pub enum ModSource {
     Modrinth,
     // Github,
 }
 
+#[derive(PartialEq, Eq)]
 pub struct Mod {
     pub mod_name: String,
     source: ModSource,
