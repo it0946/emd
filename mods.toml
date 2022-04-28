@@ -17,10 +17,18 @@ modrinth = [
     "ok-zoomer",
     "sodium",
     "starlight",
-    "iris",
     "lithium",
     "continuity",
     "dashloader",
     "fabric-api",
     "kappa",
+    "krypton"
+]
+
+# Example of downloading from github
+# downloading mods from github can be error prone, because not everyone includes
+# what minecraft version their mod is meant for, it is also possible to not have a 
+# release page at all
+github = [
+    "IrisShaders/Iris",
 ]

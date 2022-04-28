@@ -4,6 +4,7 @@ use anyhow::Context;
 use reqwest::Client;
 use tokio::{fs, io::AsyncWriteExt};
 
+mod github;
 mod modrinth;
 
 pub struct DownloadableMod {
@@ -44,13 +45,13 @@ impl DownloadableMod {
     }
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub enum ModSource {
     Modrinth,
-    // Github,
+    Github,
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone)]
 pub struct Mod {
     pub mod_name: String,
     source: ModSource,
@@ -70,19 +71,9 @@ impl Mod {
         version: &str,
         mod_loader: &str,
     ) -> anyhow::Result<DownloadableMod> {
-        return match self.source {
-            ModSource::Modrinth => {
-                let res = modrinth::get_from_modrinth(self, client, version, mod_loader)
-                    .await
-                    .with_context(|| {
-                        format!(
-                            "failed to get download link for `{}` from Modrinth",
-                            self.mod_name
-                        )
-                    })?;
-
-                Ok(res)
-            } // ModSource::Github => todo!("get_url(): ModSource::GitHub"),
-        };
+        match self.source {
+            ModSource::Modrinth => modrinth::from_modrinth(self, client, version, mod_loader).await,
+            ModSource::Github => github::from_github(self, client, version).await,
+        }
     }
 }

@@ -3,8 +3,8 @@ use crate::{
     sources::{Mod, ModSource},
 };
 use reqwest::Client;
-use std::path::PathBuf;
 use std::collections::HashSet;
+use std::path::PathBuf;
 use std::{ops::Range, sync::Arc};
 
 pub struct EmdState {
@@ -24,13 +24,23 @@ impl EmdState {
         let mc_version = config.mc_version.unwrap();
         let concurrency = config.concurrency.unwrap_or(Self::determine_worker_count());
 
-        // If I add more sources I can use [modrinth, github...].concat()
-        let mod_list = config
-            .modrinth
-            .unwrap()
-            .into_iter()
-            .map(|name| Mod::new(name, ModSource::Modrinth))
-            .collect::<Vec<Mod>>();
+        let mod_list = {
+            let modrinth = config
+                .modrinth
+                .unwrap_or(vec![])
+                .into_iter()
+                .map(|name| Mod::new(name, ModSource::Modrinth))
+                .collect::<Vec<Mod>>();
+
+            let github = config
+                .github
+                .unwrap_or(vec![])
+                .into_iter()
+                .map(|name| Mod::new(name, ModSource::Github))
+                .collect::<Vec<Mod>>();
+
+            [modrinth, github].concat()
+        };
 
         let destination = PathBuf::from(config.destination.unwrap_or(".".into()));
         if !destination.exists() {
@@ -50,10 +60,10 @@ impl EmdState {
 
     pub async fn run(mut self) {
         println!("Downloading mods:");
-        
+
         self.check_duplicates();
         let slice_indices = self.get_slice_indices();
-    
+
         let emd_state = Arc::new(self);
         let client = Client::new();
         let mut join_handles = vec![];
@@ -68,7 +78,9 @@ impl EmdState {
         }
 
         for handle in join_handles {
-            handle.await.expect("Joining handle failed");
+            if let Err(e) = handle.await {
+                println!("Joining thread failed: {}", e);
+            }
         }
     }
 
@@ -102,9 +114,15 @@ impl EmdState {
     fn check_duplicates(&mut self) {
         let mut unique_mods = HashSet::new();
         self.mod_list.retain(|m| {
-            // cloning and allocating more strings will consume more memory,
-            // but realistically it does not matter at this scale
-            let unique = unique_mods.insert(m.mod_name.clone());
+            let name = if let Some((_, name)) = m.mod_name.split_once("/") {
+                name.to_string()
+            } else {
+                m.mod_name.clone()
+            }
+            .to_lowercase();
+
+            // This may not work for duplicates from github and modrinth, since the repo could be different
+            let unique = unique_mods.insert(name);
             if !unique {
                 println!("\tduplicate mod warning: {}", m.mod_name);
             }

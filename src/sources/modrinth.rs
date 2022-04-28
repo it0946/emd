@@ -20,12 +20,13 @@ struct ModrinthResponse {
     loaders: Vec<String>,
 }
 
-pub async fn get_from_modrinth(
+pub async fn from_modrinth(
     m: &Mod,
     client: &Client,
     version: &str,
     mod_loader: &str,
 ) -> anyhow::Result<DownloadableMod> {
+    // TODO: this kind of check should probably move to EmdState::run after checking for duplicates
     if m.mod_name.contains(" ") {
         // this is quite a basic check, need more for the future
         return Err(anyhow!("Invalid modname"));
