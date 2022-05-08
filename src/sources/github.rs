@@ -1,5 +1,6 @@
 use crate::sources::{DownloadableMod, Mod};
 use anyhow::Context;
+use regex::Regex;
 use reqwest::Client;
 use serde::Deserialize;
 
@@ -22,8 +23,9 @@ struct GithubResponse {
 pub async fn from_github(
     m: &Mod,
     client: &Client,
-    version: &str,
-    // mod_loader: &str,
+    // version: &str,
+    version: &Regex,
+    // mod_loader: &str, // I'm not sure where to check this in the response
 ) -> anyhow::Result<DownloadableMod> {
     let url = format!("https://api.github.com/repos/{}/releases", m.mod_name);
     let res = client
@@ -47,11 +49,10 @@ pub async fn from_github(
         .collect::<Vec<GithubResponse>>();
 
     if remaining.len() == 0 {
-        return Err(anyhow!(
+        bail!(
             "Couldn't find a matching version of {} (this can fail on github)",
-            // version,
             m.mod_name
-        ));
+        );
     }
 
     let link = std::mem::take(&mut remaining[0].assets[0].browser_download_url);
@@ -60,10 +61,10 @@ pub async fn from_github(
     Ok(DownloadableMod::new(filename, link))
 }
 
-fn check_version(m: &GithubResponse, version: &str) -> bool {
-    if m.tag_name.contains(version) {
+fn check_version(m: &GithubResponse, version: &Regex) -> bool {
+    if version.is_match(&m.tag_name) {
         true
-    } else if m.name.contains(version) {
+    } else if version.is_match(&m.name) {
         true
     } else {
         false

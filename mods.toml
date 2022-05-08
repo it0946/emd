@@ -2,6 +2,7 @@
 
 # required. specifies the minecraft version for which emd will attempt to get mods for
 minecraft-version = "1.18.2"
+
 # required. specifies the modloader which you want mods for
 mod-loader = "fabric"
 
@@ -10,7 +11,7 @@ mod-loader = "fabric"
 # simoltaneous-downloads = 4
 
 # optional. specifies the folder where mods will be downloaded. if the path does not exist the program will fail
-# destination = "mods"
+destination = "mods"
 
 # Some example mods to download
 modrinth = [
@@ -29,6 +30,6 @@ modrinth = [
 # downloading mods from github can be error prone, because not everyone includes
 # what minecraft version their mod is meant for, it is also possible to not have a 
 # release page at all
-github = [
-    "IrisShaders/Iris",
-]
+# github = [
+#     "IrisShaders/Iris",
+# ]

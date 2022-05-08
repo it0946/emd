@@ -1,5 +1,6 @@
 use super::{DownloadableMod, Mod};
 use anyhow::Context;
+use regex::Regex;
 use reqwest::Client;
 use serde::Deserialize;
 
@@ -23,13 +24,15 @@ struct ModrinthResponse {
 pub async fn from_modrinth(
     m: &Mod,
     client: &Client,
-    version: &str,
+    // version: &str,
+    version: &Regex,
     mod_loader: &str,
 ) -> anyhow::Result<DownloadableMod> {
     // TODO: this kind of check should probably move to EmdState::run after checking for duplicates
     if m.mod_name.contains(" ") {
         // this is quite a basic check, need more for the future
-        return Err(anyhow!("Invalid modname"));
+        // return Err(anyhow!("Invalid modname"));
+        bail!("Invalid mod name");
     }
 
     let url = format!("https://api.modrinth.com/v2/project/{}/version", m.mod_name);
@@ -52,7 +55,8 @@ pub async fn from_modrinth(
             let version = res
                 .game_versions
                 .iter()
-                .filter(|s| s.contains(version))
+                // .filter(|s| s.contains(version))
+                .filter(|s| version.is_match(s))
                 .count()
                 != 0;
             if !version {
@@ -66,11 +70,7 @@ pub async fn from_modrinth(
     let mut preferred = 0;
 
     if remaining.len() == 0 {
-        return Err(anyhow!(
-            "Couldn't find a matching version of ({}) of {}",
-            version,
-            m.mod_name
-        ));
+        bail!("Couldn't find a matching version of {}", m.mod_name);
     } else if remaining.len() > 1 {
         for (i, file) in remaining[0].files.iter().enumerate() {
             if file.primary {

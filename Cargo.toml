@@ -17,6 +17,7 @@ toml = "0.5"
 num_cpus = "1"
 # nicer error handling interally without being overly complicated
 anyhow = "1"
+regex = "1.5"
 
 [profile.dev.package.'*']
 opt-level = 3

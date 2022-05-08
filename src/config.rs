@@ -1,4 +1,5 @@
 use anyhow::Context;
+use regex::Regex;
 use std::{
     fs,
     io::{BufReader, Read},
@@ -36,20 +37,26 @@ impl Config {
         let gr = config.github.as_ref();
 
         if config.mc_version.is_none() {
-            return Err(anyhow!("You must provide a version of minecraft"));
+            bail!("You must provide a version of minecraft");
         } else if config.loader.is_none() {
-            return Err(anyhow!("You must provided a mod loader"));
+            bail!("You must provide a mod loader");
         } else if mr.is_none() && gr.is_none() {
-            return Err(anyhow!("You must provide at least one mod"));
+            bail!("You must provide at least one mod");
         }
 
         let glen = gr.unwrap_or(&vec![]).len();
         let mlen = mr.unwrap_or(&vec![]).len();
 
         if glen + mlen == 0 {
-            return Err(anyhow!("You must provide at least one mod"));
+            bail!("You must provide at least one mod");
         }
-        
+
+        let check_version =
+            Regex::new(r"^1.\d{1,2}(?:\.\d{1,2}|)$").expect("regex failed to compile");
+        if !check_version.is_match(config.mc_version.as_ref().unwrap()) {
+            bail!("Invalid minecraft version")
+        }
+
         Ok(config)
     }
 }

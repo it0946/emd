@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use anyhow::Context;
+use regex::Regex;
 use reqwest::Client;
 use tokio::{fs, io::AsyncWriteExt};
 
@@ -68,7 +69,7 @@ impl Mod {
     pub async fn get_url(
         &self,
         client: &Client,
-        version: &str,
+        version: &Regex,
         mod_loader: &str,
     ) -> anyhow::Result<DownloadableMod> {
         match self.source {

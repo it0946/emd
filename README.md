@@ -12,5 +12,5 @@
 ### TODO
 - prevent the user from setting simoltaneous-downloads to absurd numbers
 - add other source sites:
-    - github
+    - If very few mods are in the list don't start any threads
     - (maybe) curseforge
